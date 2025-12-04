@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperMart Inventory & POS System</title>
     
-    <!-- Tailwind CSS with Config -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,7 +15,7 @@
                 extend: {
                     colors: {
                         slate: {
-                            850: '#1e293b', // Custom dark shade
+                            850: '#1e293b', 
                             950: '#020617',
                         }
                     }
@@ -23,7 +24,6 @@
         }
     </script>
     
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -32,8 +32,8 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white; height: auto; overflow: visible; color: black !important; }
-            /* Force light mode colors for print */
             * { border-color: #e2e8f0 !important; }
+            #sidebar { display: none; } 
         }
         .print-only { display: none; }
         
@@ -48,68 +48,133 @@
         .fade-in { animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* Transition for Dark Mode */
+        /* Transitions */
         body, div, table, td, th, input, button { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans h-screen overflow-hidden flex transition-colors duration-300">
 
-    <!-- ======================= 
-         SIDEBAR 
-    ======================== -->
-    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col no-print z-20 shadow-sm">
-        <div class="flex items-center gap-2 mb-8 px-2">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30">SM</div>
-            <h1 class="text-xl font-bold text-slate-800 dark:text-white">SuperManager</h1>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 transition-colors duration-300">
+        <div class="absolute top-6 right-6">
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+                <i class="fas fa-moon dark:hidden"></i>
+                <i class="fas fa-sun hidden dark:block"></i>
+            </button>
         </div>
-
-        <nav class="flex-1 space-y-2" id="sidebar-nav">
-            <!-- Sidebar items will be injected by JS -->
-        </nav>
-
-        <div class="text-xs text-center text-slate-400 dark:text-slate-500 mt-auto">
-            System v1.4.0<br/> Support: +91 98765 43210
-        </div>
-    </aside>
-
-    <!-- ======================= 
-         MAIN CONTENT AREA 
-    ======================== -->
-    <main class="flex-1 flex flex-col h-screen overflow-hidden no-print relative">
         
-        <!-- Header -->
-        <header class="bg-slate-50 dark:bg-slate-950 px-8 py-6 flex justify-between items-center shrink-0">
-            <div>
-                <h2 id="page-title" class="text-2xl font-bold capitalize text-slate-800 dark:text-white">Dashboard</h2>
-                <p class="text-slate-500 dark:text-slate-400 text-sm">Manage your supermarket operations efficiently</p>
+        <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md animate-in fade-in zoom-in duration-300">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/30 mb-4">SM</div>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white">Welcome Back</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">SuperMart Inventory System</p>
             </div>
-            <div class="flex items-center gap-4">
-                <!-- Dark Mode Toggle -->
-                <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
-                    <i class="fas fa-moon dark:hidden"></i>
-                    <i class="fas fa-sun hidden dark:block"></i>
-                </button>
 
-                <div class="text-right">
-                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200" id="current-date-display">Date</p>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Operator: Admin</p>
+            <form onsubmit="handleLogin(event)" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-user"></i></span>
+                        <input type="text" id="login-username" required class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 dark:bg-slate-800 dark:text-white transition-colors" placeholder="Enter username">
+                    </div>
                 </div>
-                <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">A</div>
-            </div>
-        </header>
 
-        <!-- Content Container -->
-        <div id="app-content" class="flex-1 overflow-y-auto px-8 pb-8 fade-in">
-            <!-- Dynamic content goes here -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-slate-400"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="login-password" required class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-slate-50 dark:bg-slate-800 dark:text-white transition-colors" placeholder="Enter password">
+                    </div>
+                </div>
+
+                <div id="login-error" class="hidden text-red-500 text-sm text-center font-medium bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                    Invalid credentials
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-blue-500/30 transition-all transform hover:scale-[1.02]">
+                    Login to Dashboard
+                </button>
+                
+                <div class="text-center text-xs text-slate-400 mt-4">
+                    <p>Default Manager: <span class="font-mono text-slate-600 dark:text-slate-300">admin / admin</span></p>
+                    <p>Default Staff: <span class="font-mono text-slate-600 dark:text-slate-300">staff / 1234</span></p>
+                </div>
+            </form>
         </div>
+        <div class="mt-8 text-slate-400 text-sm">System v1.9.1</div>
+    </div>
 
-    </main>
+    <!-- APP CONTAINER (Hidden by default) -->
+    <div id="app-container" class="hidden flex h-screen w-full overflow-hidden">
 
-    <!-- ======================= 
-         MODALS 
-    ======================== -->
-    
-    <!-- Add Product Modal -->
+        <!-- Backdrop -->
+        <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 hidden transition-opacity opacity-0 no-print"></div>
+
+        <!-- Sidebar (Now fixed and hidden by default on ALL screens) -->
+        <aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col z-40 shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out no-print">
+            
+            <div class="flex items-center justify-between mb-8 px-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30">SM</div>
+                    <h1 class="text-xl font-bold text-slate-800 dark:text-white">SuperManager</h1>
+                </div>
+                <!-- Close button visible on all screens now -->
+                <button onclick="toggleSidebar(false)" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 space-y-2" id="sidebar-nav">
+                <!-- Navigation Injected via JS -->
+            </nav>
+
+            <button onclick="logout()" class="flex items-center gap-3 p-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors mt-4">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                <span class="font-medium">Logout</span>
+            </button>
+
+            <div class="text-xs text-center text-slate-400 dark:text-slate-500 mt-auto pt-4">
+                System v1.8.0<br/> Support: +91 98765 43210
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-screen overflow-hidden no-print relative w-full">
+            
+            <header class="bg-slate-50 dark:bg-slate-950 px-8 py-6 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-4">
+                    <!-- Hamburger visible on ALL screens now -->
+                    <button onclick="toggleSidebar(true)" class="p-2 -ml-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shadow-sm border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+
+                    <div>
+                        <h2 id="page-title" class="text-2xl font-bold capitalize text-slate-800 dark:text-white">Dashboard</h2>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm hidden sm:block">Manage your supermarket operations efficiently</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:block"></i>
+                    </button>
+
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200" id="current-date-display">Date</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="operator-display">Operator: --</p>
+                    </div>
+                    <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800" id="user-avatar">U</div>
+                </div>
+            </header>
+
+            <div id="app-content" class="flex-1 overflow-y-auto px-4 md:px-8 pb-8 fade-in">
+                <!-- Content Injected via JS -->
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal: Add Product -->
     <div id="modal-add-product" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-96 transform transition-all scale-100 max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800">
             <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">Add New Inventory</h3>
@@ -142,7 +207,6 @@
                     <input required name="quantity" type="number" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white" placeholder="0">
                 </div>
                 
-                <!-- Perishable Toggle -->
                 <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                     <div class="flex items-center gap-2 mb-2">
                         <input type="checkbox" id="is-perishable" onchange="toggleExpiryInput(this.checked)" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
@@ -162,7 +226,7 @@
         </div>
     </div>
 
-    <!-- Transfer Stock Modal -->
+    <!-- Modal: Transfer Stock -->
     <div id="modal-transfer" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-96 transform transition-all scale-100 border border-slate-100 dark:border-slate-800">
             <h3 class="text-lg font-bold mb-1 text-slate-800 dark:text-white">Restock Shelf</h3>
@@ -191,26 +255,74 @@
         </div>
     </div>
 
-    <!-- ======================= 
-         PRINT RECEIPT AREA 
-    ======================== -->
-    <div id="print-area" class="print-only fixed top-0 left-0 w-full h-full bg-white z-[9999] p-8">
-        <!-- Receipt content injected by JS -->
+    <!-- NEW MODAL: ADD EMPLOYEE -->
+    <div id="modal-add-employee" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-96 transform transition-all scale-100 max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">Add New Employee</h3>
+            <form onsubmit="handleAddEmployee(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                    <input required name="name" type="text" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date of Birth</label>
+                    <input required name="dob" type="date" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white dark:[color-scheme:dark]">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date of Joining</label>
+                    <input required name="joinDate" type="date" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white dark:[color-scheme:dark]">
+                </div>
+                
+                <hr class="border-slate-200 dark:border-slate-700">
+                <p class="text-xs font-bold text-slate-500 uppercase">Login Credentials</p>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username</label>
+                    <input required name="username" type="text" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input required name="password" type="text" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label>
+                    <select name="role" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="toggleModal('modal-add-employee', false)" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-lg font-medium transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">Create Account</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- ======================= 
-         JAVASCRIPT LOGIC 
-    ======================== -->
+    <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+
+    <div id="print-area" class="print-only fixed top-0 left-0 w-full h-full bg-white z-[9999] p-8">
+    </div>
+
     <script>
         // --- State Management ---
         const state = {
             activeTab: 'dashboard',
             darkMode: false,
+            // User Management State
+            currentUser: null,
+            isLoggedIn: false,
+            users: [
+                { id: 1, name: 'Main Admin', role: 'manager', username: 'admin', password: 'admin', dob: '1990-01-01', joinDate: '2023-01-01' },
+                { id: 2, name: 'Rahul Sharma', role: 'staff', username: 'staff', password: '1234', dob: '1998-05-15', joinDate: '2023-06-20' }
+            ],
+            // Product State
             products: [
                 { id: 1, category: 'Grains & Pulses', name: 'Basmati Rice (5kg)', price: 450, warehouseQty: 50, shelfQty: 10, minLevel: 10, expiryDate: null },
                 { id: 2, category: 'Dairy & Bakery', name: 'Fresh Milk (1L)', price: 42, warehouseQty: 80, shelfQty: 5, minLevel: 15, expiryDate: getFutureDate(3) },
-                { id: 3, category: 'Grains & Pulses', name: 'Toor Dal (1kg)', price: 120, warehouseQty: 60, shelfQty: 15, minLevel: 10, expiryDate: null },
-                { id: 4, category: 'Snacks & Beverages', name: 'Sunflower Oil (1L)', price: 165, warehouseQty: 20, shelfQty: 25, minLevel: 10, expiryDate: getFutureDate(180) },
+                { id: 3, category: 'Grains & Pulses', name: 'Toor Dal (1kg)', price: 120, warehouseQty: 8, shelfQty: 15, minLevel: 10, expiryDate: null },
+                { id: 4, category: 'Snacks & Beverages', name: 'Sunflower Oil (1L)', price: 165, warehouseQty: 5, shelfQty: 25, minLevel: 10, expiryDate: getFutureDate(180) },
                 { id: 5, category: 'Dairy & Bakery', name: 'Bread (Whole Wheat)', price: 40, warehouseQty: 15, shelfQty: 8, minLevel: 5, expiryDate: getFutureDate(5) },
             ],
             cart: [],
@@ -219,7 +331,8 @@
                 { id: 102, date: new Date().toISOString().split('T')[0], total: 1250, items: 4, invoiceNo: 'INV-3921' },
             ],
             selectedProductForTransfer: null,
-            currentDiscount: 0
+            currentDiscount: 0,
+            isSidebarOpen: false
         };
 
         // --- Utils ---
@@ -263,14 +376,61 @@
         // --- Core Rendering Functions ---
 
         function init() {
-            document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
             // Check local storage for dark mode
             if (localStorage.getItem('darkMode') === 'true') {
                 toggleDarkMode(true);
             }
 
-            renderApp();
+            // Initially show login, hide app
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-container').classList.add('hidden');
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const userIn = document.getElementById('login-username').value;
+            const passIn = document.getElementById('login-password').value;
+            const errorMsg = document.getElementById('login-error');
+
+            const foundUser = state.users.find(u => u.username === userIn && u.password === passIn);
+
+            if (foundUser) {
+                // Success
+                state.currentUser = foundUser;
+                state.isLoggedIn = true;
+                errorMsg.classList.add('hidden');
+                
+                // Switch Views
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                
+                // Initialize App Data
+                document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('operator-display').textContent = `Operator: ${foundUser.name} (${foundUser.role})`;
+                document.getElementById('user-avatar').textContent = foundUser.name.charAt(0);
+                
+                // Reset form
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+
+                renderApp();
+            } else {
+                // Failure
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            state.currentUser = null;
+            state.isLoggedIn = false;
+            state.activeTab = 'dashboard';
+            state.cart = []; // clear cart on logout
+            
+            // Close sidebar if open
+            toggleSidebar(false);
+
+            document.getElementById('app-container').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
         }
 
         function toggleDarkMode(force) {
@@ -286,7 +446,26 @@
             }
         }
 
+        function toggleSidebar(show) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+                state.isSidebarOpen = true;
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+                state.isSidebarOpen = false;
+            }
+        }
+
         function renderApp() {
+            if(!state.isLoggedIn) return;
+
             renderSidebar();
             document.getElementById('page-title').textContent = state.activeTab.replace('-', ' ');
             
@@ -299,6 +478,7 @@
                 case 'shelves': renderShelves(contentDiv); break;
                 case 'billing': renderBilling(contentDiv); break;
                 case 'reports': renderReports(contentDiv); break;
+                case 'employees': renderEmployees(contentDiv); break;
             }
         }
 
@@ -311,13 +491,18 @@
 
             const alerts = lowStock.warehouse.length + lowStock.shelf.length + expiring.length;
             
-            const menuItems = [
+            let menuItems = [
                 { id: 'dashboard', icon: 'fa-th-large', label: 'Dashboard', badge: alerts },
                 { id: 'inventory', icon: 'fa-box', label: 'Warehouse Inventory', badge: lowStock.warehouse.length },
                 { id: 'shelves', icon: 'fa-store', label: 'Shelf Management', badge: lowStock.shelf.length },
                 { id: 'billing', icon: 'fa-shopping-cart', label: 'POS & Billing', badge: 0 },
                 { id: 'reports', icon: 'fa-file-invoice-dollar', label: 'Sales Reports', badge: 0 },
             ];
+
+            // ADD EMPLOYEE MENU IF MANAGER
+            if(state.currentUser && state.currentUser.role === 'manager') {
+                menuItems.push({ id: 'employees', icon: 'fa-users', label: 'Employee Details', badge: 0 });
+            }
 
             const navHTML = menuItems.map(item => `
                 <button onclick="setActiveTab('${item.id}')" 
@@ -335,6 +520,7 @@
 
         function setActiveTab(tabId) {
             state.activeTab = tabId;
+            toggleSidebar(false); 
             renderApp();
         }
 
@@ -348,69 +534,81 @@
             const lowStock = getLowStock();
             const expiringProducts = getExpiringProducts();
 
-            let stockAlertHtml = '';
-            if (lowStock.shelf.length > 0) {
-                const itemsHtml = lowStock.shelf.map(p => `
-                    <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
-                        <span class="font-medium text-slate-700 dark:text-slate-300">${p.name}</span>
-                        <div class="flex items-center gap-4">
-                            <span class="text-red-600 font-bold">${p.shelfQty} units left</span>
-                            <button onclick="openTransferModal(${p.id})" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold">Restock</button>
-                        </div>
+            // 1. Shelf Low Stock HTML
+            let shelfAlertHtml = '';
+            const shelfItemsHtml = lowStock.shelf.length > 0 ? lowStock.shelf.map(p => `
+                <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <span class="font-medium text-slate-700 dark:text-slate-300">${p.name}</span>
+                    <div class="flex items-center gap-4">
+                        <span class="text-red-600 font-bold">${p.shelfQty} units</span>
+                        <button onclick="openTransferModal(${p.id})" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold">Restock</button>
                     </div>
-                `).join('');
+                </div>
+            `).join('') : '<p class="text-slate-400 text-center text-xs p-4">Shelf levels optimal</p>';
 
-                stockAlertHtml = `
-                    <div class="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/30 rounded-xl overflow-hidden shadow-sm h-full">
-                        <div class="bg-red-50 dark:bg-red-900/20 p-4 border-b border-red-100 dark:border-red-900/30 flex items-center gap-2">
-                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
-                            <h3 class="font-bold text-red-700 dark:text-red-400">Shelf Restock Required</h3>
-                        </div>
-                        <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${itemsHtml}</div>
+            shelfAlertHtml = `
+                <div class="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/30 rounded-xl overflow-hidden shadow-sm h-full">
+                    <div class="bg-red-50 dark:bg-red-900/20 p-4 border-b border-red-100 dark:border-red-900/30 flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                        <h3 class="font-bold text-red-700 dark:text-red-400">Shelf Restock Required</h3>
                     </div>
-                `;
-            }
+                    <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${shelfItemsHtml}</div>
+                </div>
+            `;
 
+            // 2. Warehouse Low Stock HTML (NEW)
+            let warehouseAlertHtml = '';
+            const warehouseItemsHtml = lowStock.warehouse.length > 0 ? lowStock.warehouse.map(p => `
+                <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <span class="font-medium text-slate-700 dark:text-slate-300">${p.name}</span>
+                    <div class="flex items-center gap-4">
+                        <span class="text-purple-600 font-bold">${p.warehouseQty} units</span>
+                        <button onclick="quickAddStock(${p.id})" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold">Add Stock</button>
+                    </div>
+                </div>
+            `).join('') : '<p class="text-slate-400 text-center text-xs p-4">Warehouse levels optimal</p>';
+
+            warehouseAlertHtml = `
+                <div class="bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-900/30 rounded-xl overflow-hidden shadow-sm h-full">
+                    <div class="bg-purple-50 dark:bg-purple-900/20 p-4 border-b border-purple-100 dark:border-purple-900/30 flex items-center gap-2">
+                        <i class="fas fa-warehouse text-purple-600 dark:text-purple-400"></i>
+                        <h3 class="font-bold text-purple-700 dark:text-purple-400">Warehouse Low Stock</h3>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${warehouseItemsHtml}</div>
+                </div>
+            `;
+
+            // 3. Expiry HTML
             let expiryAlertHtml = '';
-            if (expiringProducts.length > 0) {
-                const itemsHtml = expiringProducts.map(p => {
-                    const daysLeft = Math.ceil((new Date(p.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
-                    const isUrgent = daysLeft <= 7;
-                    const colorClass = isUrgent ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400';
-                    
-                    return `
-                    <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
-                        <div>
-                            <span class="font-medium text-slate-700 dark:text-slate-300 block">${p.name}</span>
-                            <span class="text-xs text-slate-400">Total Stock: ${p.warehouseQty + p.shelfQty}</span>
-                        </div>
-                        <span class="${colorClass} px-2 py-1 rounded text-xs font-bold">
-                            ${daysLeft < 0 ? 'EXPIRED' : `Expires in ${daysLeft} days`} <br>
-                            <span class="text-[10px] opacity-75 font-normal">(${p.expiryDate})</span>
-                        </span>
+            const expiryItemsHtml = expiringProducts.length > 0 ? expiringProducts.map(p => {
+                const daysLeft = Math.ceil((new Date(p.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                const isUrgent = daysLeft <= 7;
+                const colorClass = isUrgent ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400';
+                
+                return `
+                <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <div>
+                        <span class="font-medium text-slate-700 dark:text-slate-300 block">${p.name}</span>
                     </div>
-                `}).join('');
+                    <span class="${colorClass} px-2 py-1 rounded text-xs font-bold">
+                        ${daysLeft < 0 ? 'EXPIRED' : `Expires in ${daysLeft} days`} <br>
+                        <span class="text-[10px] opacity-75 font-normal">(${p.expiryDate})</span>
+                    </span>
+                </div>
+            `}).join('') : '<p class="text-slate-400 text-center text-xs p-4">No perishables expiring soon</p>';
 
-                expiryAlertHtml = `
-                    <div class="bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-900/30 rounded-xl overflow-hidden shadow-sm h-full">
-                        <div class="bg-orange-50 dark:bg-orange-900/20 p-4 border-b border-orange-100 dark:border-orange-900/30 flex items-center gap-2">
-                            <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
-                            <h3 class="font-bold text-orange-700 dark:text-orange-400">Product Expiry Reminder</h3>
-                        </div>
-                        <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${itemsHtml}</div>
+            expiryAlertHtml = `
+                <div class="bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-900/30 rounded-xl overflow-hidden shadow-sm h-full">
+                    <div class="bg-orange-50 dark:bg-orange-900/20 p-4 border-b border-orange-100 dark:border-orange-900/30 flex items-center gap-2">
+                        <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+                        <h3 class="font-bold text-orange-700 dark:text-orange-400">Product Expiry Reminder</h3>
                     </div>
-                `;
-            } else {
-                expiryAlertHtml = `
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm h-full flex flex-col items-center justify-center p-6 text-slate-400 dark:text-slate-500">
-                        <i class="fas fa-check-circle text-4xl mb-2 text-green-100 dark:text-green-900/30"></i>
-                        <p class="text-sm">No perishable items expiring soon</p>
-                    </div>
-                `;
-            }
+                    <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${expiryItemsHtml}</div>
+                </div>
+            `;
 
             container.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <div class="flex justify-between items-start mb-4">
                             <div class="p-3 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg"><i class="fas fa-chart-line text-xl"></i></div>
@@ -431,6 +629,15 @@
 
                     <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-lg"><i class="fas fa-warehouse text-xl"></i></div>
+                            <span class="text-xs font-semibold bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-2 py-1 rounded">Supply</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Low Warehouse Stock</p>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">${lowStock.warehouse.length} <span class="text-base font-normal text-slate-400">Items</span></h3>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
                             <div class="p-3 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg"><i class="fas fa-box text-xl"></i></div>
                         </div>
                         <p class="text-slate-500 dark:text-slate-400 text-sm">Total Products</p>
@@ -438,11 +645,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    ${stockAlertHtml || `<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 text-center text-slate-400 flex flex-col items-center justify-center">
-                        <i class="fas fa-thumbs-up text-4xl mb-2 text-blue-100 dark:text-blue-900/30"></i>
-                        <p>Stock levels are good!</p>
-                    </div>`}
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    ${shelfAlertHtml}
+                    ${warehouseAlertHtml}
                     ${expiryAlertHtml}
                 </div>
             `;
@@ -487,30 +692,40 @@
 
             container.innerHTML = `
                 <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col xl:flex-row justify-between items-center gap-4">
                         <h3 class="font-bold text-lg text-slate-800 dark:text-white">Warehouse Status</h3>
-                        <div class="flex gap-3 w-full md:w-auto">
-                            <div class="relative flex-1 md:flex-none">
-                                <input type="text" onkeyup="filterTable('inventory-table-body', this.value)" placeholder="Search inventory..." class="w-full md:w-64 pl-9 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
+                        <div class="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                            <div class="relative flex-1 md:flex-none min-w-[200px]">
+                                <input type="text" onkeyup="filterTable('inventory-table-body', this.value)" placeholder="Search inventory..." class="w-full pl-9 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
                                 <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
                             </div>
+                            
+                            <button onclick="exportInventoryToExcel()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shadow-lg shadow-indigo-500/20">
+                                <i class="fas fa-file-export"></i> Export
+                            </button>
+
+                            <button onclick="triggerExcelImport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shadow-lg shadow-emerald-500/20">
+                                <i class="fas fa-file-excel"></i> Import
+                            </button>
                             <button onclick="toggleModal('modal-add-product', true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shadow-lg shadow-blue-500/20">
-                                <i class="fas fa-plus"></i> Add Product
+                                <i class="fas fa-plus"></i> Add
                             </button>
                         </div>
                     </div>
-                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
-                            <tr>
-                                <th class="p-4">Product Name</th>
-                                <th class="p-4">Price</th>
-                                <th class="p-4">Warehouse Qty</th>
-                                <th class="p-4">Shelf Qty</th>
-                                <th class="p-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inventory-table-body">${tableContent}</tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">Product Name</th>
+                                    <th class="p-4">Price</th>
+                                    <th class="p-4">Warehouse Qty</th>
+                                    <th class="p-4">Shelf Qty</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body">${tableContent}</tbody>
+                        </table>
+                    </div>
                 </div>
             `;
         }
@@ -559,17 +774,19 @@
                             <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
                         </div>
                     </div>
-                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
-                            <tr>
-                                <th class="p-4">Product Name</th>
-                                <th class="p-4">Status</th>
-                                <th class="p-4">Shelf Quantity</th>
-                                <th class="p-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="shelves-table-body">${tableContent}</tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">Product Name</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Shelf Quantity</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shelves-table-body">${tableContent}</tbody>
+                        </table>
+                    </div>
                 </div>
             `;
         }
@@ -647,20 +864,18 @@
             const total = taxableAmount + gst;
 
             container.innerHTML = `
-                <div class="flex gap-6 h-[calc(100vh-140px)]">
-                    <!-- Product Selection -->
+                <div class="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
                     <div class="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 overflow-y-auto">
                         <div class="mb-4 relative">
                             <input type="text" onkeyup="filterProducts(this.value)" placeholder="Search products..." class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
                             <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
                         </div>
-                        <div id="pos-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div id="pos-grid" class="grid grid-cols-2 xl:grid-cols-4 gap-4">
                             ${gridContent}
                         </div>
                     </div>
 
-                    <!-- Cart -->
-                    <div class="w-96 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
+                    <div class="w-full lg:w-96 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
                         <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 rounded-t-xl">
                             <h3 class="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
                                 <i class="fas fa-shopping-cart"></i> Current Bill
@@ -672,7 +887,6 @@
                         </div>
 
                         <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-b-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                            <!-- Discount Input -->
                             <div class="mb-4">
                                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Discount Percentage (%)</label>
                                 <div class="flex gap-2">
@@ -768,6 +982,109 @@
             `;
         }
 
+        // --- Employee Management Functions (New) ---
+
+        function renderEmployees(container) {
+            // Security check
+            if(state.currentUser.role !== 'manager') {
+                container.innerHTML = '<div class="text-red-500 p-8">Access Denied</div>';
+                return;
+            }
+
+            const rows = state.users.map(user => `
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                    <td class="p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300">
+                                ${user.name.charAt(0)}
+                            </div>
+                            <span class="font-medium text-slate-800 dark:text-slate-200">${user.name}</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300 capitalize">
+                        <span class="px-2 py-1 rounded text-xs font-bold ${user.role === 'manager' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'}">
+                            ${user.role}
+                        </span>
+                    </td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">${user.username}</td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300 font-mono text-xs">••••••</td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300">${user.dob}</td>
+                    <td class="p-4 text-slate-600 dark:text-slate-300">${user.joinDate}</td>
+                    <td class="p-4 text-right">
+                        ${user.id !== state.currentUser.id ? `
+                        <button onclick="deleteUser(${user.id})" class="text-red-500 hover:text-red-700 transition-colors p-2" title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : '<span class="text-xs text-slate-400 italic">Current User</span>'}
+                    </td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-800 dark:text-white">Employee Management</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Total Users: ${state.users.length}</p>
+                        </div>
+                        <button onclick="toggleModal('modal-add-employee', true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors shadow-lg shadow-blue-500/20">
+                            <i class="fas fa-user-plus"></i> Add Employee
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
+                                <tr>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Role</th>
+                                    <th class="p-4">Username</th>
+                                    <th class="p-4">Password</th>
+                                    <th class="p-4">DOB</th>
+                                    <th class="p-4">Join Date</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleAddEmployee(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            // Check if username exists
+            if(state.users.some(u => u.username === formData.get('username'))) {
+                alert('Username already taken!');
+                return;
+            }
+
+            const newUser = {
+                id: Date.now(),
+                name: formData.get('name'),
+                dob: formData.get('dob'),
+                joinDate: formData.get('joinDate'),
+                username: formData.get('username'),
+                password: formData.get('password'),
+                role: formData.get('role')
+            };
+
+            state.users.push(newUser);
+            toggleModal('modal-add-employee', false);
+            e.target.reset();
+            renderEmployees(document.getElementById('app-content'));
+            alert('Employee added successfully. They can now login.');
+        }
+
+        function deleteUser(userId) {
+            if(confirm('Are you sure you want to remove this employee? This cannot be undone.')) {
+                state.users = state.users.filter(u => u.id !== userId);
+                renderEmployees(document.getElementById('app-content'));
+            }
+        }
+
         // --- Logic Handlers ---
 
         function toggleModal(modalId, show) {
@@ -820,6 +1137,112 @@
             toggleExpiryInput(false);
         }
 
+        function triggerExcelImport() {
+            document.getElementById('excel-file-input').click();
+        }
+
+        function handleExcelUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                processExcelData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+            // Reset input so same file can be selected again
+            event.target.value = ''; 
+        }
+
+        function processExcelData(data) {
+            let addedCount = 0;
+            
+            data.forEach(row => {
+                // Map fields flexibly (case insensitive check)
+                const name = row['Name'] || row['name'] || row['Product Name'];
+                const category = row['Category'] || row['category'] || 'Others';
+                const price = row['Price'] || row['price'] || 0;
+                const qty = row['Quantity'] || row['quantity'] || row['Qty'] || 0;
+                const perishableRaw = row['Perishable'] || row['perishable'];
+                const expiry = row['Expiry'] || row['expiry'] || row['Expiry Date'] || null;
+
+                if (name && price && qty) {
+                    const isPerishable = String(perishableRaw).toLowerCase() === 'yes' || perishableRaw === true;
+                    
+                    state.products.push({
+                        id: Date.now() + Math.random(), // Ensure unique ID
+                        name: name,
+                        category: category,
+                        price: parseFloat(price),
+                        warehouseQty: parseInt(qty),
+                        shelfQty: 0,
+                        minLevel: 10,
+                        expiryDate: isPerishable ? formatDateForInput(expiry) : null
+                    });
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                alert(`Successfully imported ${addedCount} products!`);
+                renderApp();
+            } else {
+                alert("No valid product data found in file.");
+            }
+        }
+
+        // NEW: Export Function
+        function exportInventoryToExcel() {
+            if (state.products.length === 0) {
+                alert("No inventory data to export!");
+                return;
+            }
+
+            // 1. Format the data for Excel
+            const dataToExport = state.products.map(p => ({
+                "Product Name": p.name,
+                "Category": p.category,
+                "Price (INR)": p.price,
+                "Perishable": p.expiryDate ? "Yes" : "No",
+                "Expiry Date": p.expiryDate || "-",
+                "Warehouse Qty": p.warehouseQty,
+                "Shelf Qty": p.shelfQty,
+                "Total Stock": p.warehouseQty + p.shelfQty
+            }));
+
+            // 2. Create a new SheetJS workbook
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            
+            // 3. Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Current Inventory");
+
+            // 4. Generate file name with current date
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `SuperMart_Inventory_Export_${dateStr}.xlsx`;
+
+            // 5. Trigger Download
+            XLSX.writeFile(workbook, fileName);
+        }
+
+        // Helper to ensure date format YYYY-MM-DD
+        function formatDateForInput(dateVal) {
+            if(!dateVal) return null;
+            // Handle Excel serial date
+            if(typeof dateVal === 'number') {
+                const date = new Date((dateVal - (25567 + 2)) * 86400 * 1000); 
+                return date.toISOString().split('T')[0];
+            }
+            // Handle string
+            return dateVal;
+        }
+
         function openTransferModal(productId) {
             const product = state.products.find(p => p.id === productId);
             if(!product) return;
@@ -849,6 +1272,18 @@
             toggleModal('modal-transfer', false);
             state.selectedProductForTransfer = null;
             renderApp();
+        }
+
+        // NEW: Quick Add Stock Function for Warehouse
+        function quickAddStock(id) {
+            const p = state.products.find(x => x.id === id);
+            if(!p) return;
+            const added = prompt(`Add stock to ${p.name}. Current Warehouse Qty: ${p.warehouseQty}`, "0");
+            const val = parseInt(added);
+            if(val > 0) {
+                p.warehouseQty += val;
+                renderApp();
+            }
         }
 
         function addToCartWithQty(productId) {
