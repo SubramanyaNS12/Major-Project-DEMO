@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperMart Inventory & POS System</title>
+    
+    <!-- Tailwind CSS with Config -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1e293b', // Custom dark shade
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; height: auto; overflow: visible; color: black !important; }
+            /* Force light mode colors for print */
+            * { border-color: #e2e8f0 !important; }
+        }
+        .print-only { display: none; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Animation */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Transition for Dark Mode */
+        body, div, table, td, th, input, button { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-sans h-screen overflow-hidden flex transition-colors duration-300">
+
+    <!-- ======================= 
+         SIDEBAR 
+    ======================== -->
+    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col no-print z-20 shadow-sm">
+        <div class="flex items-center gap-2 mb-8 px-2">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30">SM</div>
+            <h1 class="text-xl font-bold text-slate-800 dark:text-white">SuperManager</h1>
+        </div>
+
+        <nav class="flex-1 space-y-2" id="sidebar-nav">
+            <!-- Sidebar items will be injected by JS -->
+        </nav>
+
+        <div class="text-xs text-center text-slate-400 dark:text-slate-500 mt-auto">
+            System v1.4.0<br/> Support: +91 98765 43210
+        </div>
+    </aside>
+
+    <!-- ======================= 
+         MAIN CONTENT AREA 
+    ======================== -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden no-print relative">
+        
+        <!-- Header -->
+        <header class="bg-slate-50 dark:bg-slate-950 px-8 py-6 flex justify-between items-center shrink-0">
+            <div>
+                <h2 id="page-title" class="text-2xl font-bold capitalize text-slate-800 dark:text-white">Dashboard</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-sm">Manage your supermarket operations efficiently</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-yellow-400 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block"></i>
+                </button>
+
+                <div class="text-right">
+                    <p class="text-sm font-bold text-slate-700 dark:text-slate-200" id="current-date-display">Date</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Operator: Admin</p>
+                </div>
+                <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">A</div>
+            </div>
+        </header>
+
+        <!-- Content Container -->
+        <div id="app-content" class="flex-1 overflow-y-auto px-8 pb-8 fade-in">
+            <!-- Dynamic content goes here -->
+        </div>
+
+    </main>
+
+    <!-- ======================= 
+         MODALS 
+    ======================== -->
+    
+    <!-- Add Product Modal -->
+    <div id="modal-add-product" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-96 transform transition-all scale-100 max-h-[90vh] overflow-y-auto border border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold mb-4 text-slate-800 dark:text-white">Add New Inventory</h3>
+            <form onsubmit="handleFormAddProduct(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Product Name</label>
+                    <input required name="name" type="text" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white placeholder-slate-400" placeholder="e.g. Milk">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                    <select required name="category" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+                        <option value="" disabled selected>Select Category</option>
+                        <option value="Grains & Pulses">Grains & Pulses</option>
+                        <option value="Dairy & Bakery">Dairy & Bakery</option>
+                        <option value="Snacks & Beverages">Snacks & Beverages</option>
+                        <option value="Fruits & Vegetables">Fruits & Vegetables</option>
+                        <option value="Household">Household</option>
+                        <option value="Personal Care">Personal Care</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Price (₹)</label>
+                    <input required name="price" type="number" step="0.01" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white" placeholder="0.00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Initial Quantity (Warehouse)</label>
+                    <input required name="quantity" type="number" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white" placeholder="0">
+                </div>
+                
+                <!-- Perishable Toggle -->
+                <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="is-perishable" onchange="toggleExpiryInput(this.checked)" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-700 dark:border-slate-600">
+                        <label for="is-perishable" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Perishable Item?</label>
+                    </div>
+                    <div id="expiry-input-container" class="hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Expiry Date</label>
+                        <input name="expiryDate" type="date" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-700 dark:text-white dark:[color-scheme:dark]">
+                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="toggleModal('modal-add-product', false)" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-lg font-medium transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Transfer Stock Modal -->
+    <div id="modal-transfer" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl p-6 w-96 transform transition-all scale-100 border border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold mb-1 text-slate-800 dark:text-white">Restock Shelf</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Moving: <span id="transfer-product-name" class="font-semibold text-slate-800 dark:text-slate-200">--</span></p>
+            
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4 text-sm space-y-2 border border-blue-100 dark:border-blue-900/50 text-slate-700 dark:text-slate-300">
+                <div class="flex justify-between">
+                    <span>Available in Warehouse:</span>
+                    <span id="transfer-warehouse-qty" class="font-bold">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Currently on Shelf:</span>
+                    <span id="transfer-shelf-qty" class="font-bold">0</span>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity to Move</label>
+                <input id="transfer-amount-input" type="number" min="1" class="w-full border border-slate-300 dark:border-slate-700 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-800 dark:text-white">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="button" onclick="toggleModal('modal-transfer', false)" class="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 py-2 rounded-lg font-medium transition-colors">Cancel</button>
+                <button type="button" onclick="submitTransfer()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">Transfer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================= 
+         PRINT RECEIPT AREA 
+    ======================== -->
+    <div id="print-area" class="print-only fixed top-0 left-0 w-full h-full bg-white z-[9999] p-8">
+        <!-- Receipt content injected by JS -->
+    </div>
+
+    <!-- ======================= 
+         JAVASCRIPT LOGIC 
+    ======================== -->
+    <script>
+        // --- State Management ---
+        const state = {
+            activeTab: 'dashboard',
+            darkMode: false,
+            products: [
+                { id: 1, category: 'Grains & Pulses', name: 'Basmati Rice (5kg)', price: 450, warehouseQty: 50, shelfQty: 10, minLevel: 10, expiryDate: null },
+                { id: 2, category: 'Dairy & Bakery', name: 'Fresh Milk (1L)', price: 42, warehouseQty: 80, shelfQty: 5, minLevel: 15, expiryDate: getFutureDate(3) },
+                { id: 3, category: 'Grains & Pulses', name: 'Toor Dal (1kg)', price: 120, warehouseQty: 60, shelfQty: 15, minLevel: 10, expiryDate: null },
+                { id: 4, category: 'Snacks & Beverages', name: 'Sunflower Oil (1L)', price: 165, warehouseQty: 20, shelfQty: 25, minLevel: 10, expiryDate: getFutureDate(180) },
+                { id: 5, category: 'Dairy & Bakery', name: 'Bread (Whole Wheat)', price: 40, warehouseQty: 15, shelfQty: 8, minLevel: 5, expiryDate: getFutureDate(5) },
+            ],
+            cart: [],
+            salesHistory: [
+                { id: 101, date: '2023-10-25', total: 4500, items: 12, invoiceNo: 'INV-1029' },
+                { id: 102, date: new Date().toISOString().split('T')[0], total: 1250, items: 4, invoiceNo: 'INV-3921' },
+            ],
+            selectedProductForTransfer: null,
+            currentDiscount: 0
+        };
+
+        // --- Utils ---
+        function getFutureDate(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return date.toISOString().split('T')[0];
+        }
+
+        const formatINR = (amount) => {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                maximumFractionDigits: 2,
+            }).format(amount);
+        };
+
+        const getCurrentDate = () => new Date().toISOString().split('T')[0];
+
+        const getLowStock = () => {
+            return {
+                warehouse: state.products.filter(p => p.warehouseQty <= p.minLevel),
+                shelf: state.products.filter(p => p.shelfQty <= p.minLevel)
+            };
+        };
+
+        const getExpiringProducts = () => {
+            return state.products
+                .filter(p => p.expiryDate)
+                .sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+        };
+
+        const groupByCategory = (items) => {
+            return items.reduce((acc, item) => {
+                if (!acc[item.category]) acc[item.category] = [];
+                acc[item.category].push(item);
+                return acc;
+            }, {});
+        };
+
+        // --- Core Rendering Functions ---
+
+        function init() {
+            document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // Check local storage for dark mode
+            if (localStorage.getItem('darkMode') === 'true') {
+                toggleDarkMode(true);
+            }
+
+            renderApp();
+        }
+
+        function toggleDarkMode(force) {
+            const html = document.documentElement;
+            if (force === true || (force !== false && !html.classList.contains('dark'))) {
+                html.classList.add('dark');
+                state.darkMode = true;
+                localStorage.setItem('darkMode', 'true');
+            } else {
+                html.classList.remove('dark');
+                state.darkMode = false;
+                localStorage.setItem('darkMode', 'false');
+            }
+        }
+
+        function renderApp() {
+            renderSidebar();
+            document.getElementById('page-title').textContent = state.activeTab.replace('-', ' ');
+            
+            const contentDiv = document.getElementById('app-content');
+            contentDiv.innerHTML = ''; 
+
+            switch(state.activeTab) {
+                case 'dashboard': renderDashboard(contentDiv); break;
+                case 'inventory': renderInventory(contentDiv); break;
+                case 'shelves': renderShelves(contentDiv); break;
+                case 'billing': renderBilling(contentDiv); break;
+                case 'reports': renderReports(contentDiv); break;
+            }
+        }
+
+        function renderSidebar() {
+            const lowStock = getLowStock();
+            const expiring = getExpiringProducts().filter(p => {
+                const days = (new Date(p.expiryDate) - new Date()) / (1000 * 60 * 60 * 24);
+                return days <= 7; 
+            });
+
+            const alerts = lowStock.warehouse.length + lowStock.shelf.length + expiring.length;
+            
+            const menuItems = [
+                { id: 'dashboard', icon: 'fa-th-large', label: 'Dashboard', badge: alerts },
+                { id: 'inventory', icon: 'fa-box', label: 'Warehouse Inventory', badge: lowStock.warehouse.length },
+                { id: 'shelves', icon: 'fa-store', label: 'Shelf Management', badge: lowStock.shelf.length },
+                { id: 'billing', icon: 'fa-shopping-cart', label: 'POS & Billing', badge: 0 },
+                { id: 'reports', icon: 'fa-file-invoice-dollar', label: 'Sales Reports', badge: 0 },
+            ];
+
+            const navHTML = menuItems.map(item => `
+                <button onclick="setActiveTab('${item.id}')" 
+                    class="w-full flex items-center justify-between p-3 rounded-lg transition-colors ${state.activeTab === item.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}">
+                    <div class="flex items-center gap-3">
+                        <i class="fas ${item.icon} w-5 text-center"></i>
+                        <span class="font-medium">${item.label}</span>
+                    </div>
+                    ${item.badge > 0 ? `<span class="text-xs px-2 py-1 rounded-full ${state.activeTab === item.id ? 'bg-white text-blue-600' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}">${item.badge}</span>` : ''}
+                </button>
+            `).join('');
+
+            document.getElementById('sidebar-nav').innerHTML = navHTML;
+        }
+
+        function setActiveTab(tabId) {
+            state.activeTab = tabId;
+            renderApp();
+        }
+
+        // --- View Renderers ---
+
+        function renderDashboard(container) {
+            const todaySales = state.salesHistory
+                .filter(s => s.date === getCurrentDate())
+                .reduce((acc, curr) => acc + curr.total, 0);
+            
+            const lowStock = getLowStock();
+            const expiringProducts = getExpiringProducts();
+
+            let stockAlertHtml = '';
+            if (lowStock.shelf.length > 0) {
+                const itemsHtml = lowStock.shelf.map(p => `
+                    <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
+                        <span class="font-medium text-slate-700 dark:text-slate-300">${p.name}</span>
+                        <div class="flex items-center gap-4">
+                            <span class="text-red-600 font-bold">${p.shelfQty} units left</span>
+                            <button onclick="openTransferModal(${p.id})" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-bold">Restock</button>
+                        </div>
+                    </div>
+                `).join('');
+
+                stockAlertHtml = `
+                    <div class="bg-white dark:bg-slate-900 border border-red-200 dark:border-red-900/30 rounded-xl overflow-hidden shadow-sm h-full">
+                        <div class="bg-red-50 dark:bg-red-900/20 p-4 border-b border-red-100 dark:border-red-900/30 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400"></i>
+                            <h3 class="font-bold text-red-700 dark:text-red-400">Shelf Restock Required</h3>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${itemsHtml}</div>
+                    </div>
+                `;
+            }
+
+            let expiryAlertHtml = '';
+            if (expiringProducts.length > 0) {
+                const itemsHtml = expiringProducts.map(p => {
+                    const daysLeft = Math.ceil((new Date(p.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                    const isUrgent = daysLeft <= 7;
+                    const colorClass = isUrgent ? 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400' : 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400';
+                    
+                    return `
+                    <div class="flex justify-between items-center text-sm p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded border-b border-slate-100 dark:border-slate-800 last:border-0">
+                        <div>
+                            <span class="font-medium text-slate-700 dark:text-slate-300 block">${p.name}</span>
+                            <span class="text-xs text-slate-400">Total Stock: ${p.warehouseQty + p.shelfQty}</span>
+                        </div>
+                        <span class="${colorClass} px-2 py-1 rounded text-xs font-bold">
+                            ${daysLeft < 0 ? 'EXPIRED' : `Expires in ${daysLeft} days`} <br>
+                            <span class="text-[10px] opacity-75 font-normal">(${p.expiryDate})</span>
+                        </span>
+                    </div>
+                `}).join('');
+
+                expiryAlertHtml = `
+                    <div class="bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-900/30 rounded-xl overflow-hidden shadow-sm h-full">
+                        <div class="bg-orange-50 dark:bg-orange-900/20 p-4 border-b border-orange-100 dark:border-orange-900/30 flex items-center gap-2">
+                            <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+                            <h3 class="font-bold text-orange-700 dark:text-orange-400">Product Expiry Reminder</h3>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 gap-1 max-h-60 overflow-y-auto custom-scrollbar">${itemsHtml}</div>
+                    </div>
+                `;
+            } else {
+                expiryAlertHtml = `
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm h-full flex flex-col items-center justify-center p-6 text-slate-400 dark:text-slate-500">
+                        <i class="fas fa-check-circle text-4xl mb-2 text-green-100 dark:text-green-900/30"></i>
+                        <p class="text-sm">No perishable items expiring soon</p>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg"><i class="fas fa-chart-line text-xl"></i></div>
+                            <span class="text-xs font-semibold bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded">Today</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Today's Sales</p>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">${formatINR(todaySales)}</h3>
+                    </div>
+                    
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg"><i class="fas fa-exclamation-triangle text-xl"></i></div>
+                            <span class="text-xs font-semibold bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-1 rounded">Action Needed</span>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Low Shelf Stock</p>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">${lowStock.shelf.length} <span class="text-base font-normal text-slate-400">Items</span></h3>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg"><i class="fas fa-box text-xl"></i></div>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Total Products</p>
+                        <h3 class="text-3xl font-bold text-slate-800 dark:text-white">${state.products.length}</h3>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    ${stockAlertHtml || `<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-100 dark:border-slate-800 text-center text-slate-400 flex flex-col items-center justify-center">
+                        <i class="fas fa-thumbs-up text-4xl mb-2 text-blue-100 dark:text-blue-900/30"></i>
+                        <p>Stock levels are good!</p>
+                    </div>`}
+                    ${expiryAlertHtml}
+                </div>
+            `;
+        }
+
+        function renderInventory(container) {
+            const grouped = groupByCategory(state.products);
+            const sortedCategories = Object.keys(grouped).sort();
+
+            let tableContent = '';
+            
+            sortedCategories.forEach(category => {
+                tableContent += `
+                    <tr class="bg-slate-100 dark:bg-slate-800/50">
+                        <td colspan="5" class="p-2 pl-4 font-bold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">${category}</td>
+                    </tr>
+                `;
+                
+                grouped[category].forEach(p => {
+                    tableContent += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800">
+                            <td class="p-4 font-medium text-slate-800 dark:text-slate-200">
+                                ${p.name}
+                                ${p.expiryDate ? `<div class="text-xs text-orange-600 dark:text-orange-400 mt-1"><i class="fas fa-clock mr-1"></i>Exp: ${p.expiryDate}</div>` : ''}
+                            </td>
+                            <td class="p-4 text-slate-600 dark:text-slate-300">${formatINR(p.price)}</td>
+                            <td class="p-4">
+                                <span class="px-2 py-1 rounded-full text-xs ${p.warehouseQty < p.minLevel ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}">
+                                    ${p.warehouseQty} Units
+                                </span>
+                            </td>
+                            <td class="p-4 text-slate-400">${p.shelfQty} Units</td>
+                            <td class="p-4 text-right">
+                                <button onclick="openTransferModal(${p.id})" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-xs flex items-center justify-end gap-1 ml-auto">
+                                    <i class="fas fa-exchange-alt"></i> Move to Shelf
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            container.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-white">Warehouse Status</h3>
+                        <div class="flex gap-3 w-full md:w-auto">
+                            <div class="relative flex-1 md:flex-none">
+                                <input type="text" onkeyup="filterTable('inventory-table-body', this.value)" placeholder="Search inventory..." class="w-full md:w-64 pl-9 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
+                                <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
+                            </div>
+                            <button onclick="toggleModal('modal-add-product', true)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shadow-lg shadow-blue-500/20">
+                                <i class="fas fa-plus"></i> Add Product
+                            </button>
+                        </div>
+                    </div>
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Product Name</th>
+                                <th class="p-4">Price</th>
+                                <th class="p-4">Warehouse Qty</th>
+                                <th class="p-4">Shelf Qty</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-table-body">${tableContent}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderShelves(container) {
+            const totalShelfItems = state.products.reduce((acc, p) => acc + p.shelfQty, 0);
+            const grouped = groupByCategory(state.products);
+            const sortedCategories = Object.keys(grouped).sort();
+
+            let tableContent = '';
+
+            sortedCategories.forEach(category => {
+                tableContent += `
+                    <tr class="bg-slate-100 dark:bg-slate-800/50">
+                        <td colspan="4" class="p-2 pl-4 font-bold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">${category}</td>
+                    </tr>
+                `;
+                
+                grouped[category].forEach(p => {
+                    let statusBadge = '<span class="text-green-600 dark:text-green-400 font-bold text-xs bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded">GOOD</span>';
+                    if (p.shelfQty === 0) statusBadge = '<span class="text-red-600 dark:text-red-400 font-bold text-xs bg-red-50 dark:bg-red-900/30 px-2 py-1 rounded">OUT OF STOCK</span>';
+                    else if (p.shelfQty < p.minLevel) statusBadge = '<span class="text-orange-600 dark:text-orange-400 font-bold text-xs bg-orange-50 dark:bg-orange-900/30 px-2 py-1 rounded">LOW STOCK</span>';
+
+                    tableContent += `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800">
+                            <td class="p-4 font-medium text-slate-800 dark:text-slate-200">${p.name}</td>
+                            <td class="p-4">${statusBadge}</td>
+                            <td class="p-4 text-xl font-light text-slate-800 dark:text-slate-200">${p.shelfQty}</td>
+                            <td class="p-4 text-right">
+                                <button onclick="openTransferModal(${p.id})" class="border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-3 py-1 rounded text-xs transition-colors">Restock</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            container.innerHTML = `
+                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-800 dark:text-white">Shop Floor (Shelves)</h3>
+                            <div class="text-sm text-slate-500 dark:text-slate-400">Total Items on Shelf: ${totalShelfItems}</div>
+                        </div>
+                        <div class="relative w-full md:w-auto">
+                            <input type="text" onkeyup="filterTable('shelves-table-body', this.value)" placeholder="Search shelves..." class="w-full md:w-64 pl-9 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
+                            <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                        <thead class="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Product Name</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4">Shelf Quantity</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shelves-table-body">${tableContent}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderBilling(container) {
+            const grouped = groupByCategory(state.products);
+            const sortedCategories = Object.keys(grouped).sort();
+
+            let gridContent = '';
+            
+            sortedCategories.forEach(category => {
+                gridContent += `
+                    <div class="col-span-full mt-2 mb-1">
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider border-b border-slate-200 dark:border-slate-700 pb-1">${category}</h4>
+                    </div>
+                `;
+                
+                gridContent += grouped[category].map(p => {
+                    const disabled = p.shelfQty === 0;
+                    const inputId = `qty-input-${p.id}`;
+                    return `
+                    <div class="pos-item p-4 rounded-lg border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between transition-all hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md ${disabled ? 'opacity-60 bg-slate-50 dark:bg-slate-800' : ''}">
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-200 truncate" title="${p.name}">${p.name}</h4>
+                            <div class="flex justify-between items-center mt-1">
+                                <span class="text-blue-600 dark:text-blue-400 font-bold">${formatINR(p.price)}</span>
+                                <span class="text-xs ${p.shelfQty === 0 ? 'text-red-500 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400'}">${p.shelfQty === 0 ? 'Out of Stock' : p.shelfQty + ' left'}</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <input type="number" id="${inputId}" value="1" min="1" max="${p.shelfQty}" 
+                                   class="w-16 border border-slate-300 dark:border-slate-700 rounded p-1 text-center text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white" 
+                                   ${disabled ? 'disabled' : ''}>
+                            <button 
+                                onclick="addToCartWithQty(${p.id})"
+                                ${disabled ? 'disabled' : ''}
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium py-1 transition-colors disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed">
+                                <i class="fas fa-plus text-xs mr-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+            });
+
+            // Cart Items
+            let cartHtml = '';
+            if (state.cart.length === 0) {
+                cartHtml = `
+                    <div class="h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 text-sm">
+                        <i class="fas fa-shopping-cart text-4xl mb-2 opacity-20"></i>
+                        <p>Cart is empty</p>
+                    </div>`;
+            } else {
+                cartHtml = state.cart.map(item => `
+                    <div class="flex justify-between items-center group mb-3 bg-white dark:bg-slate-900 p-2 rounded border border-slate-100 dark:border-slate-700">
+                        <div>
+                            <p class="font-medium text-sm text-slate-800 dark:text-slate-200">${item.name}</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${formatINR(item.price)} x ${item.qty}</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">${formatINR(item.price * item.qty)}</span>
+                            <button onclick="removeFromCart(${item.id})" class="text-slate-300 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Totals logic
+            const subTotal = state.cart.reduce((a,c) => a + (c.price * c.qty), 0);
+            const discountAmount = subTotal * (state.currentDiscount / 100);
+            const taxableAmount = subTotal - discountAmount;
+            const gst = taxableAmount * 0.18;
+            const total = taxableAmount + gst;
+
+            container.innerHTML = `
+                <div class="flex gap-6 h-[calc(100vh-140px)]">
+                    <!-- Product Selection -->
+                    <div class="flex-1 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 overflow-y-auto">
+                        <div class="mb-4 relative">
+                            <input type="text" onkeyup="filterProducts(this.value)" placeholder="Search products..." class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:text-white">
+                            <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                        <div id="pos-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            ${gridContent}
+                        </div>
+                    </div>
+
+                    <!-- Cart -->
+                    <div class="w-96 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col">
+                        <div class="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 rounded-t-xl">
+                            <h3 class="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                <i class="fas fa-shopping-cart"></i> Current Bill
+                            </h3>
+                        </div>
+                        
+                        <div class="flex-1 overflow-y-auto p-4 bg-slate-50/50 dark:bg-slate-950/30">
+                            ${cartHtml}
+                        </div>
+
+                        <div class="p-6 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-b-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                            <!-- Discount Input -->
+                            <div class="mb-4">
+                                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase mb-1">Discount Percentage (%)</label>
+                                <div class="flex gap-2">
+                                    <input type="number" min="0" max="100" id="discount-input" value="${state.currentDiscount}" onchange="updateDiscount(this.value)" class="w-full border border-slate-300 dark:border-slate-600 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 dark:text-white">
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                                <div class="flex justify-between"><span>Subtotal</span><span>${formatINR(subTotal)}</span></div>
+                                <div class="flex justify-between text-green-600 dark:text-green-400"><span>Discount (${state.currentDiscount}%)</span><span>-${formatINR(discountAmount)}</span></div>
+                                <div class="flex justify-between"><span>Taxable</span><span>${formatINR(taxableAmount)}</span></div>
+                                <div class="flex justify-between"><span>GST (18%)</span><span>${formatINR(gst)}</span></div>
+                            </div>
+                            <div class="flex justify-between items-center mb-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <span class="font-bold text-lg text-slate-800 dark:text-white">Total</span>
+                                <span class="font-bold text-2xl text-blue-600 dark:text-blue-400">${formatINR(total)}</span>
+                            </div>
+                            <button onclick="processSale()" ${state.cart.length === 0 ? 'disabled' : ''} class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-bold shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2 transition-all">
+                                <i class="fas fa-print"></i> Print Bill & Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReports(container) {
+            const grouped = state.salesHistory.reduce((acc, curr) => {
+                if(!acc[curr.date]) acc[curr.date] = { items: 0, total: 0};
+                acc[curr.date].items += curr.items;
+                acc[curr.date].total += curr.total;
+                return acc;
+            }, {});
+
+            const reportRows = Object.entries(grouped).map(([date, stats]) => `
+                <tr class="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                    <td class="p-3 font-medium text-slate-700 dark:text-slate-300">${date}</td>
+                    <td class="p-3 text-right text-slate-600 dark:text-slate-400">${stats.items}</td>
+                    <td class="p-3 text-right font-bold text-blue-600 dark:text-blue-400">${formatINR(stats.total)}</td>
+                </tr>
+            `).join('');
+
+            const historyRows = state.salesHistory.slice().reverse().map(sale => `
+                <tr class="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="p-3 text-slate-500 dark:text-slate-400">${sale.date}</td>
+                    <td class="p-3 font-medium text-slate-700 dark:text-slate-300">${sale.invoiceNo || 'N/A'}</td>
+                    <td class="p-3 text-center text-slate-600 dark:text-slate-400">${sale.items}</td>
+                    <td class="p-3 text-right font-bold text-slate-800 dark:text-slate-200">${formatINR(sale.total)}</td>
+                </tr>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="space-y-8">
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                            <i class="fas fa-chart-bar text-blue-600 dark:text-blue-400"></i> Daily Sales Performance
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-slate-50 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3 rounded-l-lg">Date</th>
+                                        <th class="p-3 text-right">Items Sold</th>
+                                        <th class="p-3 text-right rounded-r-lg">Total Revenue (Inc. GST)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${reportRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+                        <h3 class="font-bold text-lg mb-4 flex items-center gap-2 text-slate-800 dark:text-white">
+                            <i class="fas fa-history text-slate-500"></i> Recent Transaction History
+                        </h3>
+                        <div class="overflow-hidden border border-slate-100 dark:border-slate-800 rounded-lg">
+                            <div class="max-h-96 overflow-y-auto custom-scrollbar">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 uppercase text-xs sticky top-0 shadow-sm">
+                                        <tr>
+                                            <th class="p-3">Date</th>
+                                            <th class="p-3">Bill Number</th>
+                                            <th class="p-3 text-center">Items</th>
+                                            <th class="p-3 text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">${historyRows}</tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- Logic Handlers ---
+
+        function toggleModal(modalId, show) {
+            const el = document.getElementById(modalId);
+            if(show) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        }
+
+        function toggleExpiryInput(isChecked) {
+            const container = document.getElementById('expiry-input-container');
+            const input = container.querySelector('input');
+            if(isChecked) {
+                container.classList.remove('hidden');
+                input.required = true;
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+                input.value = '';
+            }
+        }
+
+        function handleFormAddProduct(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const isPerishable = document.getElementById('is-perishable').checked;
+            const expiryDate = isPerishable ? formData.get('expiryDate') : null;
+
+            const newProduct = {
+                id: Date.now(),
+                name: formData.get('name'),
+                category: formData.get('category'),
+                price: parseFloat(formData.get('price')),
+                warehouseQty: parseInt(formData.get('quantity')),
+                shelfQty: 0, 
+                minLevel: 10,
+                expiryDate: expiryDate
+            };
+            
+            state.products.push(newProduct);
+            toggleModal('modal-add-product', false);
+            renderApp();
+            e.target.reset();
+            document.getElementById('is-perishable').checked = false;
+            toggleExpiryInput(false);
+        }
+
+        function openTransferModal(productId) {
+            const product = state.products.find(p => p.id === productId);
+            if(!product) return;
+            state.selectedProductForTransfer = product;
+            
+            document.getElementById('transfer-product-name').textContent = product.name;
+            document.getElementById('transfer-warehouse-qty').textContent = product.warehouseQty;
+            document.getElementById('transfer-shelf-qty').textContent = product.shelfQty;
+            document.getElementById('transfer-amount-input').value = '';
+            
+            toggleModal('modal-transfer', true);
+        }
+
+        function submitTransfer() {
+            const amount = parseInt(document.getElementById('transfer-amount-input').value);
+            const product = state.selectedProductForTransfer;
+            
+            if(!product || !amount || amount <= 0) return;
+            if(amount > product.warehouseQty) {
+                alert("Insufficient warehouse stock!");
+                return;
+            }
+
+            product.warehouseQty -= amount;
+            product.shelfQty += amount;
+            
+            toggleModal('modal-transfer', false);
+            state.selectedProductForTransfer = null;
+            renderApp();
+        }
+
+        function addToCartWithQty(productId) {
+            const product = state.products.find(p => p.id === productId);
+            const qtyInput = document.getElementById(`qty-input-${productId}`);
+            const qtyToAdd = parseInt(qtyInput.value);
+
+            if (!qtyToAdd || qtyToAdd <= 0) {
+                alert("Please enter a valid quantity");
+                return;
+            }
+
+            const existing = state.cart.find(c => c.id === productId);
+            const currentQtyInCart = existing ? existing.qty : 0;
+            const totalQty = currentQtyInCart + qtyToAdd;
+
+            if (totalQty > product.shelfQty) {
+                alert(`Not enough stock on shelf! You can only add ${product.shelfQty - currentQtyInCart} more.`);
+                return;
+            }
+
+            if (existing) {
+                existing.qty += qtyToAdd;
+            } else {
+                state.cart.push({ ...product, qty: qtyToAdd });
+            }
+            
+            qtyInput.value = 1;
+            renderApp();
+        }
+
+        function removeFromCart(productId) {
+            state.cart = state.cart.filter(c => c.id !== productId);
+            renderApp();
+        }
+
+        function updateDiscount(value) {
+            const val = parseFloat(value);
+            state.currentDiscount = isNaN(val) ? 0 : val;
+            renderApp(); // Re-render to update calculations
+        }
+
+        function filterProducts(query) {
+            const term = query.toLowerCase();
+            const cards = document.querySelectorAll('.pos-item');
+            cards.forEach(card => {
+                const text = card.querySelector('h4').textContent.toLowerCase();
+                card.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        }
+
+        function filterTable(tbodyId, query) {
+            const term = query.toLowerCase();
+            const rows = document.querySelectorAll(`#${tbodyId} tr`);
+            rows.forEach(row => {
+                if(row.querySelector('td[colspan]')) return; 
+                const text = row.querySelector('td').textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        }
+
+        function processSale() {
+            if (state.cart.length === 0) return;
+
+            // Calculation Logic
+            const subTotal = state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const discountPercent = state.currentDiscount || 0;
+            const discountAmount = subTotal * (discountPercent / 100);
+            const taxableAmount = subTotal - discountAmount;
+            const gst = taxableAmount * 0.18;
+            const grandTotal = taxableAmount + gst;
+            
+            const invoiceNo = `INV-${Math.floor(1000 + Math.random() * 9000)}`;
+            const date = getCurrentDate();
+
+            // Record Sale
+            state.salesHistory.push({
+                id: Date.now(),
+                date: date,
+                invoiceNo: invoiceNo,
+                total: grandTotal,
+                items: state.cart.reduce((acc, curr) => acc + curr.qty, 0)
+            });
+
+            // Update Stock
+            state.products.forEach(p => {
+                const cartItem = state.cart.find(c => c.id === p.id);
+                if (cartItem) {
+                    p.shelfQty -= cartItem.qty;
+                }
+            });
+
+            // Generate Receipt HTML
+            const receiptItems = state.cart.map(item => `
+                <tr>
+                    <td class="py-1 text-left">${item.name}</td>
+                    <td class="py-1 text-center">${item.qty}</td>
+                    <td class="py-1 text-right">${item.price}</td>
+                    <td class="py-1 text-right">${(item.price * item.qty).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            // Render Receipt
+            const receiptHtml = `
+                <div class="max-w-md mx-auto border-2 border-slate-800 p-6 text-black">
+                    <div class="text-center mb-6">
+                        <h1 class="text-2xl font-bold uppercase tracking-wider">SuperMart India</h1>
+                        <p class="text-sm text-slate-500">Koramangala, Bangalore, 560034</p>
+                        <p class="text-sm text-slate-500">GSTIN: 29AAAAA0000A1Z5</p>
+                    </div>
+                    
+                    <div class="flex justify-between text-sm mb-4 border-b border-slate-300 pb-2">
+                        <span>Date: ${date}</span>
+                        <span>Invoice: ${invoiceNo}</span>
+                    </div>
+
+                    <table class="w-full text-sm mb-4">
+                        <thead class="border-b border-slate-300">
+                            <tr><th class="text-left">Item</th><th class="text-center">Qty</th><th class="text-right">Price</th><th class="text-right">Total</th></tr>
+                        </thead>
+                        <tbody>${receiptItems}</tbody>
+                    </table>
+
+                    <div class="border-t border-slate-300 pt-2 space-y-1 text-sm">
+                        <div class="flex justify-between"><span>Subtotal</span><span>${formatINR(subTotal)}</span></div>
+                        
+                        ${discountPercent > 0 ? `
+                        <div class="flex justify-between text-slate-600">
+                            <span>Discount (${discountPercent}%)</span>
+                            <span>-${formatINR(discountAmount)}</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600 italic">
+                            <span>Taxable Amount</span>
+                            <span>${formatINR(taxableAmount)}</span>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="flex justify-between"><span>GST (18%)</span><span>${formatINR(gst)}</span></div>
+                        <div class="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-dashed border-slate-400">
+                            <span>Grand Total</span><span>${formatINR(grandTotal)}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-8 text-xs text-slate-500">
+                        <p>Thank you for shopping with us!</p>
+                        <p>No returns on perishables.</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('print-area').innerHTML = receiptHtml;
+
+            // Reset
+            state.cart = [];
+            state.currentDiscount = 0;
+            renderApp();
+            
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+
+        // Start
+        init();
+
+    </script>
+</body>
+</html>
